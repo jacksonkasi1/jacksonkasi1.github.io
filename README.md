@@ -8,7 +8,7 @@ For clean embedding that shows only the game, use this iframe pointing to embed.
 
 ```html
 <iframe 
-  src="https://YOUR-USERNAME.github.io/8bithub/embed.html" 
+  src="https://jacksonkasi1.github.io/8bithub/embed.html" 
   width="320" 
   height="240" 
   frameborder="0">
@@ -21,13 +21,13 @@ To launch a specific game automatically, add a hash to the URL:
 
 ```html
 <!-- Arcade Game -->
-<iframe src="https://YOUR-USERNAME.github.io/8bithub/embed.html#arcade" width="320" height="240" frameborder="0"></iframe>
+<iframe src="https://jacksonkasi1.github.io/8bithub/embed.html#arcade" width="320" height="240" frameborder="0"></iframe>
 
 <!-- Text Adventure -->
-<iframe src="https://YOUR-USERNAME.github.io/8bithub/embed.html#adventure" width="320" height="240" frameborder="0"></iframe>
+<iframe src="https://jacksonkasi1.github.io/8bithub/embed.html#adventure" width="320" height="240" frameborder="0"></iframe>
 
 <!-- Demo Scene -->
-<iframe src="https://YOUR-USERNAME.github.io/8bithub/embed.html#demo" width="320" height="240" frameborder="0"></iframe>
+<iframe src="https://jacksonkasi1.github.io/8bithub/embed.html#demo" width="320" height="240" frameborder="0"></iframe>
 ```
 
 ## Available Games
