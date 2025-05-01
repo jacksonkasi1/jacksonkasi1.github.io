@@ -49,4 +49,4 @@ To launch a specific game automatically, add a hash to the URL:
 
 ---
 
-Made with 💾 and nostalgia | [MIT License](LICENSE) 
+Made with 💾 and nostalgia | [MIT License](LICENSE)
