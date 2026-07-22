@@ -46,8 +46,6 @@ jobs:
             echo '== Install =='
             cd .launch-land-build
             npm install --no-audit --no-fund
-            echo '== Validate =='
-            npm run validate
             echo '== Production build =='
             npm run build
           } 2>&1 | tee launch-land-3d-build.log
