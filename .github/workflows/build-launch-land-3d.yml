@@ -26,41 +26,57 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Extract source
+      - name: Build patched game
+        id: build
+        continue-on-error: true
         run: |
-          rm -rf .launch-land-build
-          mkdir -p .launch-land-build
-          cat launch-land-3d-source/part-* | base64 --decode > /tmp/launch-land-source.tar.gz
-          tar -xzf /tmp/launch-land-source.tar.gz -C .launch-land-build
+          set -o pipefail
+          {
+            echo '== Extract base source =='
+            rm -rf .launch-land-build
+            mkdir -p .launch-land-build
+            cat launch-land-3d-source/part-* | base64 --decode > /tmp/launch-land-source.tar.gz
+            tar -xzf /tmp/launch-land-source.tar.gz -C .launch-land-build
 
-      - name: Apply physics v2 patch
-        run: |
-          cat launch-land-3d-source/physics-v2-* | base64 --decode > /tmp/launch-land-physics-v2.tar.gz
-          echo '6e7bf896a027748b9b12f275561a39d88dd123dae751f30c259e197f473fed5c  /tmp/launch-land-physics-v2.tar.gz' | sha256sum -c -
-          tar -xzf /tmp/launch-land-physics-v2.tar.gz -C .launch-land-build
+            echo '== Verify and apply physics v2 =='
+            cat launch-land-3d-source/physics-v2-* | base64 --decode > /tmp/launch-land-physics-v2.tar.gz
+            echo '6e7bf896a027748b9b12f275561a39d88dd123dae751f30c259e197f473fed5c  /tmp/launch-land-physics-v2.tar.gz' | sha256sum -c -
+            tar -xzf /tmp/launch-land-physics-v2.tar.gz -C .launch-land-build
 
-      - name: Install, validate and build
-        working-directory: .launch-land-build
-        run: |
-          npm install --no-audit --no-fund
-          npm run validate
-          npm run build
+            echo '== Install =='
+            cd .launch-land-build
+            npm install --no-audit --no-fund
+            echo '== Validate =='
+            npm run validate
+            echo '== Production build =='
+            npm run build
+          } 2>&1 | tee launch-land-3d-build.log
 
       - name: Publish bundled game
+        if: steps.build.outcome == 'success'
         run: |
           rm -rf launch-land-3d
           mkdir -p launch-land-3d
           cp -a .launch-land-build/dist/. launch-land-3d/
           touch launch-land-3d/.nojekyll
 
-      - name: Commit deployment
+      - name: Commit result
+        if: always()
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A launch-land-3d
+          git add -A launch-land-3d launch-land-3d-build.log
           if git diff --cached --quiet; then
-            echo 'No deployment changes.'
+            echo 'No changes to commit.'
             exit 0
           fi
-          git commit -m 'Deploy Launch & Land 3D physics v2'
+          if [ '${{ steps.build.outcome }}' = 'success' ]; then
+            git commit -m 'Deploy Launch & Land 3D physics v2'
+          else
+            git commit -m 'Record Launch & Land 3D physics v2 build failure'
+          fi
           git push
+
+      - name: Fail workflow when build failed
+        if: steps.build.outcome != 'success'
+        run: exit 1
