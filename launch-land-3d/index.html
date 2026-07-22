@@ -1,44 +1,88 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
-  <meta name="theme-color" content="#75c9ff">
-  <title>Launch & Land 3D</title>
-  <style>
-    *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#75c9ff;color:#fff;font:700 16px/1.45 system-ui,-apple-system,sans-serif}body{display:grid;place-items:center}.load{text-align:center;padding:24px;text-shadow:0 2px 8px #245}.spinner{width:48px;height:48px;margin:0 auto 16px;border:5px solid #ffffff55;border-top-color:#fff;border-radius:50%;animation:s .8s linear infinite}@keyframes s{to{transform:rotate(360deg)}}button{border:0;border-radius:999px;padding:14px 24px;font:inherit}
-  </style>
-</head>
-<body>
-  <div class="load"><div class="spinner"></div><span id="load-status">Loading Launch &amp; Land 3D…</span></div>
-  <script>
-  (async()=>{
-    const status=document.querySelector('#load-status');
-    if(!('DecompressionStream' in window)) throw new Error('Please use a recent Chrome, Edge, Firefox, or Safari browser.');
-    status.textContent='Downloading game…';
-    const files=Array.from({length:9},(_,i)=>`data/p${i}.txt?v=20260722-3`);
-    const encoded=(await Promise.all(files.map(async file=>{
-      const response=await fetch(file,{cache:'no-store'});
-      if(!response.ok) throw new Error(`Game download failed: ${file} (HTTP ${response.status}).`);
-      return response.text();
-    }))).join('').replace(/\s/g,'');
-    const compressed=Uint8Array.from(atob(encoded),character=>character.charCodeAt(0));
-    status.textContent='Starting game…';
-    let html=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#75c9ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Launch & Land 3D</title>
 
-    const oldThree='import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js";';
-    const safeThree=`let THREE;\nfor (const url of [\n  "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js",\n  "https://fastly.jsdelivr.net/npm/three@0.185.1/build/three.module.min.js",\n  "https://unpkg.com/three@0.185.1/build/three.module.min.js"\n]) {\n  try { THREE = await import(url); break; } catch (error) { console.warn('Three.js load failed', url, error); }\n}\nif (!THREE) {\n  const loading = document.querySelector('#loading-overlay');\n  if (loading) loading.innerHTML = '<section class="panel compact-panel"><h2>STARTUP ERROR</h2><p>Unable to load the 3D renderer. Check your connection and reload.</p><button class="primary-button" onclick="location.reload()">RELOAD</button></section>';\n  throw new Error('Unable to load Three.js');\n}`;
-    if(!html.includes(oldThree)) throw new Error('Hosted game patch target was not found.');
-    html=html.replace(oldThree,safeThree)
-      .replace('"https://cdn.skypack.dev/@dimforge/rapier3d-compat@0.19.3",','"https://fastly.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/rapier.mjs",')
-      .replace('"https://esm.sh/@dimforge/rapier3d-compat@0.19.3"','"https://unpkg.com/@dimforge/rapier3d-compat@0.19.3/rapier.mjs"')
-      .replace(')), 15000)', ')), 30000)');
-
-    document.open();document.write(html);document.close();
-  })().catch(error=>{
-    console.error(error);
-    document.body.innerHTML=`<div class="load"><h2>Unable to load the game</h2><p>${error.message}</p><button onclick="location.reload()">Retry</button></div>`;
-  });
-  </script>
-</body>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.185.1/build/three.module.js",
+          "@dimforge/rapier3d-compat": "https://cdn.jsdelivr.net/npm/@dimforge/rapier3d-compat@0.19.3/rapier.mjs"
+        }
+      }
+    </script>
+    <script type="module" crossorigin src="/launch-land-3d/assets/index-DQiXW8b-.js"></script>
+    <link rel="stylesheet" crossorigin href="/launch-land-3d/assets/index-eN1Tq9Dl.css">
+  </head>
+  <body>
+    <div id="app">
+      <canvas id="game-canvas" aria-label="Launch and Land 3D game"></canvas>
+      <div id="hud" class="hud hidden">
+        <div class="hud-top">
+          <div class="pill"><span id="level-label">LEVEL 1</span><small id="vehicle-label">CAR</small></div>
+          <div class="pill coin-pill"><span class="coin-icon">●</span><span id="coin-count">0</span></div>
+          <button id="pause-button" class="icon-button" aria-label="Pause">Ⅱ</button>
+          <button id="sound-button" class="icon-button" aria-label="Toggle sound">🔊</button>
+        </div>
+        <div id="aim-panel" class="aim-panel">
+          <div class="meter-row"><span>POWER</span><div class="meter"><i id="power-fill"></i></div><b id="power-value">0%</b></div>
+          <div class="meter-row"><span>ANGLE</span><div class="angle-dial"><i id="angle-needle"></i></div><b id="angle-value">35°</b></div>
+        </div>
+        <div id="health-wrap" class="health-wrap"><span>HEALTH</span><div class="health-bar"><i id="health-fill"></i></div></div>
+        <button id="restart-button" class="restart-fab" aria-label="Restart">↻</button>
+        <div id="air-hint" class="air-hint hidden"><span>HOLD LEFT<br><b>ROTATE BACK</b></span><span>HOLD RIGHT<br><b>ROTATE FORWARD</b></span></div>
+      </div>
+      <div id="toast" class="toast hidden"></div>
+      <div id="menu-overlay" class="overlay">
+        <section class="panel home-panel">
+          <div class="logo-mark">🚙</div>
+          <h1>Launch <em>&</em> Land <strong>3D</strong></h1>
+          <p>Drag. Launch. Flip. Land.</p>
+          <button id="play-button" class="primary-button">PLAY</button>
+          <button id="open-levels-button" class="secondary-button">LEVELS</button>
+        </section>
+      </div>
+      <div id="selection-overlay" class="overlay hidden">
+        <section class="panel selection-panel">
+          <button id="selection-back" class="back-button">←</button>
+          <h2>SELECT LEVEL</h2>
+          <div id="level-grid" class="level-grid"></div>
+          <h2>SELECT VEHICLE</h2>
+          <div id="vehicle-grid" class="vehicle-grid"></div>
+          <button id="start-level-button" class="primary-button">START</button>
+        </section>
+      </div>
+      <div id="pause-overlay" class="overlay hidden">
+        <section class="panel compact-panel">
+          <h2>PAUSED</h2>
+          <button id="resume-button" class="primary-button">RESUME</button>
+          <button id="pause-restart-button" class="secondary-button">RESTART</button>
+          <button id="pause-menu-button" class="secondary-button">LEVEL SELECT</button>
+        </section>
+      </div>
+      <div id="result-overlay" class="overlay hidden">
+        <section class="panel result-panel">
+          <div id="result-kicker" class="result-kicker">LEVEL COMPLETE</div>
+          <h2 id="result-title">PERFECT LANDING!</h2>
+          <div id="result-stars" class="stars">☆☆☆</div>
+          <div class="score-card">
+            <div><span>SCORE</span><b id="result-score">0</b></div>
+            <div><span>TIME</span><b id="result-time">0.0s</b></div>
+            <div><span>COINS</span><b id="result-coins">0/0</b></div>
+          </div>
+          <button id="next-button" class="primary-button">NEXT LEVEL</button>
+          <button id="retry-button" class="secondary-button">RETRY</button>
+          <button id="result-menu-button" class="text-button">LEVEL SELECT</button>
+        </section>
+      </div>
+      <div id="loading-overlay" class="overlay loading-overlay">
+        <div class="loader"></div><p>Loading physics…</p>
+      </div>
+    </div>
+  </body>
 </html>
