@@ -1,0 +1,58 @@
+name: Build Launch & Land 3D
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'launch-land-3d-source/part-*'
+      - '.github/workflows/build-launch-land-3d.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: launch-land-3d-deploy
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Extract source
+        run: |
+          rm -rf .launch-land-build
+          mkdir -p .launch-land-build
+          cat launch-land-3d-source/part-* | base64 --decode > /tmp/launch-land-source.tar.gz
+          tar -xzf /tmp/launch-land-source.tar.gz -C .launch-land-build
+
+      - name: Install and build
+        working-directory: .launch-land-build
+        run: |
+          npm install --no-audit --no-fund
+          npm run build
+
+      - name: Publish bundled game
+        run: |
+          rm -rf launch-land-3d
+          mkdir -p launch-land-3d
+          cp -a .launch-land-build/dist/. launch-land-3d/
+          touch launch-land-3d/.nojekyll
+
+      - name: Commit deployment
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A launch-land-3d
+          if git diff --cached --quiet; then
+            echo 'No deployment changes.'
+            exit 0
+          fi
+          git commit -m 'Deploy bundled Launch & Land 3D'
+          git push
