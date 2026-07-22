@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'launch-land-3d-source/part-*'
+      - 'launch-land-3d-source/physics-v2-*'
       - '.github/workflows/build-launch-land-3d.yml'
   workflow_dispatch:
 
@@ -32,10 +33,17 @@ jobs:
           cat launch-land-3d-source/part-* | base64 --decode > /tmp/launch-land-source.tar.gz
           tar -xzf /tmp/launch-land-source.tar.gz -C .launch-land-build
 
-      - name: Install and build
+      - name: Apply physics v2 patch
+        run: |
+          cat launch-land-3d-source/physics-v2-* | base64 --decode > /tmp/launch-land-physics-v2.tar.gz
+          echo '6e7bf896a027748b9b12f275561a39d88dd123dae751f30c259e197f473fed5c  /tmp/launch-land-physics-v2.tar.gz' | sha256sum -c -
+          tar -xzf /tmp/launch-land-physics-v2.tar.gz -C .launch-land-build
+
+      - name: Install, validate and build
         working-directory: .launch-land-build
         run: |
           npm install --no-audit --no-fund
+          npm run validate
           npm run build
 
       - name: Publish bundled game
@@ -54,5 +62,5 @@ jobs:
             echo 'No deployment changes.'
             exit 0
           fi
-          git commit -m 'Deploy bundled Launch & Land 3D'
+          git commit -m 'Deploy Launch & Land 3D physics v2'
           git push
