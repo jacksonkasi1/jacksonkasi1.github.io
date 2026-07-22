@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+    <meta name="theme-color" content="#050311" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <title>Eclipse Beast Run</title>
+  </head>
+  <body>
+    <main id="game-shell">
+      <canvas id="game-canvas" aria-label="Eclipse Beast Run game canvas"></canvas>
+      <div id="speed-vignette"></div>
+      <div id="flash-layer"></div>
+
+      <section id="hud" class="hud hidden" aria-live="polite">
+        <div class="hud-top">
+          <div class="rune-panel score-panel"><span>SCORE</span><strong id="score">0</strong></div>
+          <div class="rune-panel compact"><span>DIST</span><strong id="distance">0m</strong></div>
+          <button id="pause-btn" class="icon-button" aria-label="Pause">Ⅱ</button>
+        </div>
+        <div class="hud-mid">
+          <div class="stat-chip"><i class="shard-icon">◆</i><strong id="shards">0</strong></div>
+          <div class="sigil-meter"><span>LION</span><div id="sigil-pips"><i></i><i></i><i></i></div><b id="sigil-text">0/3</b></div>
+          <div class="multiplier" id="multiplier">×1</div>
+        </div>
+        <div id="power-status" class="power-status hidden"><span id="power-name"></span><div><i id="power-fill"></i></div></div>
+      </section>
+
+      <div id="toast-layer" aria-live="assertive"></div>
+
+      <section id="menu-screen" class="overlay active">
+        <div class="moon-mark"><span></span></div>
+        <div class="title-lockup">
+          <p>CELESTIAL JUNGLE RUNNER</p>
+          <h1>ECLIPSE<br/><em>BEAST RUN</em></h1>
+        </div>
+        <p class="menu-copy">Collect the moon. Awaken the beast.</p>
+        <button id="play-btn" class="rune-button primary"><span>PLAY</span></button>
+        <div class="menu-row">
+          <button id="skin-btn" class="rune-button small">ORB SKINS</button>
+          <button id="settings-btn" class="rune-button small">SETTINGS</button>
+        </div>
+        <p id="menu-best" class="best-line">BEST 0</p>
+        <div class="swipe-hint"><span>↔</span><b>SWIPE TO MOVE</b><span>↕</span></div>
+      </section>
+
+      <section id="pause-screen" class="overlay">
+        <div class="panel">
+          <p class="eyebrow">THE JUNGLE WAITS</p>
+          <h2>PAUSED</h2>
+          <button id="resume-btn" class="rune-button primary">RESUME</button>
+          <button id="pause-restart-btn" class="rune-button">RESTART</button>
+          <button id="pause-menu-btn" class="rune-button">MAIN MENU</button>
+        </div>
+      </section>
+
+      <section id="gameover-screen" class="overlay">
+        <div class="panel result-panel">
+          <p id="result-kicker" class="eyebrow">THE ECLIPSE FADES</p>
+          <h2 id="result-title">RUN ENDED</h2>
+          <div class="result-score"><span>SCORE</span><strong id="result-score">0</strong></div>
+          <div class="result-grid">
+            <div><span>BEST</span><b id="result-best">0</b></div>
+            <div><span>DISTANCE</span><b id="result-distance">0m</b></div>
+            <div><span>SHARDS</span><b id="result-shards">0</b></div>
+            <div><span>AWAKENINGS</span><b id="result-transformations">0</b></div>
+          </div>
+          <button id="retry-btn" class="rune-button primary">RUN AGAIN</button>
+          <button id="result-menu-btn" class="rune-button">MAIN MENU</button>
+        </div>
+      </section>
+
+      <section id="settings-screen" class="overlay">
+        <div class="panel">
+          <p class="eyebrow">ANCIENT CONTROLS</p>
+          <h2>SETTINGS</h2>
+          <button id="sound-toggle" class="setting-row"><span>SOUND & MUSIC</span><b>ON</b></button>
+          <button id="haptics-toggle" class="setting-row"><span>HAPTICS</span><b>ON</b></button>
+          <button id="settings-back" class="rune-button primary">BACK</button>
+        </div>
+      </section>
+
+      <section id="skin-screen" class="overlay">
+        <div class="panel">
+          <p class="eyebrow">CELESTIAL SHELLS</p>
+          <h2>ORB SKINS</h2>
+          <div class="skin-card selected"><div class="mini-orb"></div><span>ECLIPSE</span><b>SELECTED</b></div>
+          <div class="skin-card locked"><div class="mini-orb ember"></div><span>SOLAR ASH</span><b>COMING SOON</b></div>
+          <button id="skin-back" class="rune-button primary">BACK</button>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
