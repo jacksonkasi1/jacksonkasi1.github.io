@@ -1,11 +1,15 @@
-name: Build Launch & Land 3D
+name: Build Eclipse Beast Run
 
 on:
   push:
     branches: [main]
     paths:
-      - 'launch-land-3d-source/part-*'
-      - 'launch-land-3d-source/physics-v2-*'
+      - 'eclipse-beast-run-source/**'
+      - '.github/workflows/build-launch-land-3d.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'eclipse-beast-run-source/**'
       - '.github/workflows/build-launch-land-3d.yml'
   workflow_dispatch:
 
@@ -13,68 +17,52 @@ permissions:
   contents: write
 
 concurrency:
-  group: launch-land-3d-deploy
+  group: eclipse-beast-run-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-and-publish:
+  validate-build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: eclipse-beast-run-source
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: npm
+          cache-dependency-path: eclipse-beast-run-source/package-lock.json
 
-      - name: Build patched game
-        id: build
-        continue-on-error: true
-        run: |
-          set -o pipefail
-          {
-            echo '== Extract base source =='
-            rm -rf .launch-land-build
-            mkdir -p .launch-land-build
-            cat launch-land-3d-source/part-* | base64 --decode > /tmp/launch-land-source.tar.gz
-            tar -xzf /tmp/launch-land-source.tar.gz -C .launch-land-build
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
 
-            echo '== Verify and apply physics v2 =='
-            cat launch-land-3d-source/physics-v2-* | base64 --decode > /tmp/launch-land-physics-v2.tar.gz
-            echo '6e7bf896a027748b9b12f275561a39d88dd123dae751f30c259e197f473fed5c  /tmp/launch-land-physics-v2.tar.gz' | sha256sum -c -
-            tar -xzf /tmp/launch-land-physics-v2.tar.gz -C .launch-land-build
+      - name: Validate gameplay rules
+        run: npm run validate
 
-            echo '== Install =='
-            cd .launch-land-build
-            npm install --no-audit --no-fund
-            echo '== Production build =='
-            npm run build
-          } 2>&1 | tee launch-land-3d-build.log
+      - name: Production build
+        run: npm run build
 
       - name: Publish bundled game
-        if: steps.build.outcome == 'success'
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: .
         run: |
           rm -rf launch-land-3d
           mkdir -p launch-land-3d
-          cp -a .launch-land-build/dist/. launch-land-3d/
+          cp -a eclipse-beast-run-source/dist/. launch-land-3d/
           touch launch-land-3d/.nojekyll
 
-      - name: Commit result
-        if: always()
+      - name: Commit deployed game
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        working-directory: .
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -A launch-land-3d launch-land-3d-build.log
+          git add -A launch-land-3d
           if git diff --cached --quiet; then
-            echo 'No changes to commit.'
+            echo 'No deployment changes to commit.'
             exit 0
           fi
-          if [ '${{ steps.build.outcome }}' = 'success' ]; then
-            git commit -m 'Deploy Launch & Land 3D physics v2'
-          else
-            git commit -m 'Record Launch & Land 3D physics v2 build failure'
-          fi
+          git commit -m 'Deploy Eclipse Beast Run'
           git push
-
-      - name: Fail workflow when build failed
-        if: steps.build.outcome != 'success'
-        run: exit 1
