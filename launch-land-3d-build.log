@@ -4,25 +4,22 @@
 == Install ==
 
 added 15 packages in 6s
-== Validate ==
+== Production build ==
 
-> launch-land-3d@1.0.0 validate
-> node scripts/validate.mjs
+> launch-land-3d@1.0.0 build
+> vite build
 
-node:internal/modules/cjs/loader:1433
-  throw err;
-  ^
-
-Error: Cannot find module '/home/runner/work/jacksonkasi1.github.io/jacksonkasi1.github.io/.launch-land-build/scripts/validate.mjs'
-    at Function._resolveFilename (node:internal/modules/cjs/loader:1430:15)
-    at defaultResolveImpl (node:internal/modules/cjs/loader:1040:19)
-    at resolveForCJSWithHooks (node:internal/modules/cjs/loader:1045:22)
-    at Function._load (node:internal/modules/cjs/loader:1216:25)
-    at wrapModuleLoad (node:internal/modules/cjs/loader:254:19)
-    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)
-    at node:internal/main/run_main_module:36:49 {
-  code: 'MODULE_NOT_FOUND',
-  requireStack: []
-}
-
-Node.js v22.23.1
+[36mvite v7.3.0 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32m✓[39m 19 modules transformed.
+rendering chunks...
+computing gzip size...
+[2mdist/[22m[32mindex.html                 [39m[1m[2m    4.55 kB[22m[1m[22m[2m │ gzip:   1.45 kB[22m
+[2mdist/[22m[2massets/[22m[35mindex-eN1Tq9Dl.css  [39m[1m[2m    8.52 kB[22m[1m[22m[2m │ gzip:   2.79 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex-D9g0O_gP.js   [39m[1m[33m2,825.60 kB[39m[22m[2m │ gzip: 983.23 kB[22m
+[33m
+(!) Some chunks are larger than 2800 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[32m✓ built in 1.81s[39m
